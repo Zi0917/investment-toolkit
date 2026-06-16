@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>投資工具箱</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#0e0e12;--bg2:#15151c;--bg3:#1c1c26;--bg4:#242430;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.14);
+  --purple:#9b87f5;--purple-dim:rgba(155,135,245,0.15);
+  --purple-glow:rgba(155,135,245,0.06);
+  --text:#e8e6f0;--text2:#9994b0;--text3:#5a5670;
+  --green:#4ade80;--green-dim:rgba(74,222,128,0.12);
+  --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.10);
+  --coral:#f87171;
+  --teal:#34d399;
+  --radius:14px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 16px 48px;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg);}::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px;}
+
+.container{max-width:760px;margin:0 auto;}
+
+/* HEADER */
+.header{margin-bottom:32px;text-align:center;}
+.header-eyebrow{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;color:var(--purple);text-transform:uppercase;margin-bottom:10px;}
+.header-title{font-size:26px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.header-sub{font-size:13px;color:var(--text2);line-height:1.6;}
+
+/* TABS */
+.mode-tabs{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:4px;gap:4px;margin-bottom:24px;}
+.mode-tab{flex:1;padding:9px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;text-align:center;color:var(--text2);transition:all 0.2s;border:1px solid transparent;}
+.mode-tab.active{background:var(--purple-dim);color:var(--purple);border-color:rgba(155,135,245,0.25);}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:16px;}
+.card-title{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:18px;}
+
+/* INPUTS */
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.input-group{display:flex;flex-direction:column;gap:6px;}
+.input-group.full{grid-column:1/-1;}
+.input-label{font-size:12px;color:var(--text2);font-weight:500;}
+.input-desc{font-size:11px;color:var(--text3);margin-top:2px;line-height:1.5;}
+.input-wrap{position:relative;}
+.input-unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text3);font-family:'Space Mono',monospace;pointer-events:none;}
+input[type=number],input[type=range]{width:100%;}
+input[type=number]{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 40px 10px 14px;font-size:14px;color:var(--text);font-family:'Space Mono',monospace;outline:none;transition:border-color 0.2s;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input[type=number]:focus{border-color:var(--purple);}
+input[type=range]{-webkit-appearance:none;height:4px;background:var(--bg4);border-radius:2px;outline:none;margin-top:8px;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--purple);cursor:pointer;border:2px solid var(--bg2);}
+.range-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:4px;}
+.range-val{color:var(--purple);font-weight:700;}
+
+/* COMPARE TOGGLE */
+.compare-toggle{display:flex;align-items:center;gap:10px;cursor:pointer;padding:12px 14px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:12px;}
+.toggle-box{width:36px;height:20px;border-radius:10px;background:var(--bg4);border:1px solid var(--border2);position:relative;transition:background 0.2s;flex-shrink:0;}
+.toggle-box.on{background:var(--purple);}
+.toggle-knob{width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:left 0.2s;}
+.toggle-box.on .toggle-knob{left:18px;}
+.toggle-label{font-size:13px;color:var(--text2);}
+
+/* CALC BTN */
+.calc-btn{width:100%;padding:14px;background:var(--purple);border:none;border-radius:var(--radius-sm);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:opacity 0.2s;margin-top:4px;}
+.calc-btn:hover{opacity:0.88;}
+
+/* RESULTS */
+.result-section{display:none;}
+.result-section.visible{display:block;}
+
+.big-result{text-align:center;padding:28px 20px;background:var(--purple-glow);border:1px solid rgba(155,135,245,0.2);border-radius:var(--radius);margin-bottom:16px;}
+.big-label{font-size:12px;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;}
+.big-num{font-family:'Space Mono',monospace;font-size:38px;font-weight:700;color:var(--purple);line-height:1;margin-bottom:4px;}
+.big-sub{font-size:12px;color:var(--text2);}
+
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.stat-box{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;}
+.stat-val{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;margin-bottom:3px;}
+.stat-label{font-size:11px;color:var(--text3);}
+.stat-box.invest .stat-val{color:var(--amber);}
+.stat-box.profit .stat-val{color:var(--green);}
+.stat-box.rate .stat-val{color:var(--purple);}
+
+/* CHART */
+.chart-wrap{position:relative;height:260px;margin-bottom:8px;}
+
+/* MILESTONES */
+.milestone-list{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.milestone-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);}
+.milestone-year{font-family:'Space Mono',monospace;font-size:12px;color:var(--text3);min-width:48px;}
+.milestone-bar-bg{flex:1;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden;}
+.milestone-bar{height:100%;border-radius:2px;background:var(--purple);transition:width 0.6s;}
+.milestone-val{font-family:'Space Mono',monospace;font-size:12px;color:var(--text);min-width:80px;text-align:right;}
+
+/* COMPARE RESULTS */
+.compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.compare-card{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;}
+.compare-card.winner{border-color:rgba(155,135,245,0.35);background:var(--purple-dim);}
+.compare-title{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px;}
+.compare-num{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--purple);margin-bottom:4px;}
+.compare-sub{font-size:11px;color:var(--text2);}
+.compare-diff{text-align:center;padding:12px;background:var(--amber-dim);border:1px solid rgba(251,191,36,0.2);border-radius:var(--radius-sm);margin-bottom:16px;font-size:13px;color:var(--amber);line-height:1.7;}
+
+/* INSIGHT */
+.insight{background:var(--bg3);border-left:3px solid var(--purple);border-radius:0 var(--radius-sm) var(--radius-sm) 0;padding:12px 14px;font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:16px;}
+
+/* ETF PRESETS */
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+.preset-btn{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);transition:all 0.15s;}
+.preset-btn:hover{border-color:var(--purple);color:var(--purple);}
+.preset-btn.active{background:var(--purple-dim);color:var(--purple);border-color:rgba(155,135,245,0.35);}
+
+@media(max-width:500px){
+  .input-grid{grid-template-columns:1fr;}
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .compare-grid{grid-template-columns:1fr;}
+  .big-num{font-size:30px;}
+}
+
+.tabs{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:4px;gap:4px;margin-bottom:20px;}
+.tab{flex:1;padding:9px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;text-align:center;color:var(--text2);transition:all 0.2s;border:1px solid transparent;}
+.tab.active{background:var(--purple-dim);color:var(--purple);border-color:rgba(155,135,245,0.25);}
+.tab-page{display:none;}
+.tab-page.active{display:block;}
+
+/* SUMMARY */
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+.summary-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;}
+.summary-val{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;margin-bottom:3px;}
+.summary-label{font-size:11px;color:var(--text3);}
+.summary-box.invest .summary-val{color:var(--amber);}
+.summary-box.value .summary-val{color:var(--purple);}
+.summary-box.profit .summary-val{color:var(--green);}
+.summary-box.profit.neg .summary-val{color:var(--coral);}
+.summary-box.rate .summary-val{color:var(--green);}
+.summary-box.rate.neg .summary-val{color:var(--coral);}
+
+/* FORM */
+input[type=number],input[type=date],input[type=text]{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:10px 14px;font-size:14px;color:var(--text);font-family:'Space Mono',monospace;outline:none;transition:border-color 0.2s;}
+input[type=text]{font-family:'Noto Sans TC',sans-serif;}
+input[type=number]{padding-right:50px;-moz-appearance:textfield;}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus{border-color:var(--purple);}
+input[type=date]{color-scheme:dark;}
+
+.add-btn{width:100%;padding:13px;background:var(--purple);border:none;border-radius:var(--radius-sm);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;transition:opacity 0.2s;margin-top:6px;}
+.add-btn:hover{opacity:0.88;}
+
+/* HOLDINGS TABLE */
+.holding-row{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:8px;}
+.holding-info{flex:1;}
+.holding-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.holding-detail{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;}
+.holding-stats{text-align:right;}
+.holding-val{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--purple);}
+.holding-cost{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;}
+
+/* TRANSACTION LIST */
+.tx-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:6px;}
+.tx-date{font-family:'Space Mono',monospace;font-size:11px;color:var(--text3);min-width:78px;}
+.tx-name{flex:1;font-size:13px;color:var(--text);font-weight:500;}
+.tx-detail{font-family:'Space Mono',monospace;font-size:12px;color:var(--text2);}
+.tx-delete{font-size:18px;color:var(--text3);cursor:pointer;padding:0 2px;line-height:1;}
+.tx-delete:hover{color:var(--coral);}
+
+/* PRICE INPUT LIST */
+.price-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border);margin-bottom:8px;}
+.price-name{flex:1;font-size:13px;color:var(--text);font-weight:700;}
+.price-shares{font-size:11px;color:var(--text3);font-family:'Space Mono',monospace;}
+.price-input{width:110px;}
+
+/* CHART */
+/* INSIGHT */
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;line-height:1.7;}
+
+/* SECTION SUBTITLE */
+.subtitle{font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.6;}
+
+@media(max-width:500px){
+  .input-grid{grid-template-columns:1fr;}
+  .summary-row{grid-template-columns:1fr 1fr;}
+  .holding-row{flex-wrap:wrap;}
+  .holding-stats{width:100%;text-align:left;margin-top:4px;}
+}
+
+/* MASTER TAB SWITCHER */
+.master-tabs{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:4px;gap:4px;margin-bottom:20px;}
+.master-tab{flex:1;padding:11px;border-radius:var(--radius-sm);font-size:14px;font-weight:700;cursor:pointer;text-align:center;color:var(--text2);transition:all 0.2s;border:1px solid transparent;}
+.master-tab.active{background:var(--purple);color:#fff;}
+.master-page{display:none;}
+.master-page.active{display:block;}
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-eyebrow">Investment Toolkit</div>
+    <div class="header-title">投資工具箱</div>
+    <div class="header-sub">先用複利模擬器試算，再用投資紀錄追蹤實際表現</div>
+  </div>
+
+  <div class="master-tabs">
+    <div class="master-tab active" onclick="switchMaster('sim')">📈 複利模擬器</div>
+    <div class="master-tab" onclick="switchMaster('port')">💰 我的投資紀錄</div>
+  </div>
+
+  <div class="master-page active" id="master-sim">
+    <!-- MODE TABS -->
+  <div class="mode-tabs">
+    <div class="mode-tab active" onclick="switchMode('dca')">📅 定期定額</div>
+    <div class="mode-tab" onclick="switchMode('lump')">💰 一次性投入</div>
+    <div class="mode-tab" onclick="switchMode('compare')">⚖️ 比較模式</div>
+  </div>
+
+  <!-- DCA MODE -->
+  <div id="mode-dca">
+    <div class="card">
+      <div class="card-title">ETF 快速套用</div>
+      <div class="preset-row" id="dca-presets">
+        <div class="preset-btn" onclick="applyPreset('0050',7)">0050（年化7%）</div>
+        <div class="preset-btn" onclick="applyPreset('006208',7)">006208（年化7%）</div>
+        <div class="preset-btn" onclick="applyPreset('00878',6)">00878（年化6%）</div>
+        <div class="preset-btn" onclick="applyPreset('SPY',10)">SPY（年化10%）</div>
+      </div>
+      <div class="card-title">投資設定</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <div class="input-label">每月投入金額</div>
+          <div class="input-desc">你每個月要定期定額的錢</div>
+          <div class="input-wrap">
+            <input type="number" id="dca-amount" value="3000" min="100" step="100">
+            <span class="input-unit">元</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">預計年化報酬率</div>
+          <div class="input-desc">歷史平均：台股ETF約6–8%</div>
+          <div class="input-wrap">
+            <input type="number" id="dca-rate" value="7" min="1" max="20" step="0.5">
+            <span class="input-unit">%</span>
+          </div>
+        </div>
+        <div class="input-group full">
+          <div class="input-label">投資年數：<span class="range-val" id="dca-years-val">20</span> 年</div>
+          <div class="input-desc">你打算持續投資多久</div>
+          <input type="range" id="dca-years" min="1" max="40" value="20" oninput="document.getElementById('dca-years-val').textContent=this.value">
+          <div class="range-row"><span>1年</span><span>10年</span><span>20年</span><span>30年</span><span>40年</span></div>
+        </div>
+      </div>
+      <div class="compare-toggle" onclick="toggleEarlyCompare()" style="margin-top:16px;">
+        <div class="toggle-box" id="early-toggle"><div class="toggle-knob"></div></div>
+        <div class="toggle-label">同時顯示「晚5年開始」的差距</div>
+      </div>
+      <button class="calc-btn" onclick="calcDCA()">計算結果</button>
+    </div>
+
+    <div class="result-section" id="dca-result">
+      <div class="big-result">
+        <div class="big-label">最終資產</div>
+        <div class="big-num" id="dca-final">—</div>
+        <div class="big-sub" id="dca-final-sub">—</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box invest"><div class="stat-val" id="dca-total-in">—</div><div class="stat-label">總投入金額</div></div>
+        <div class="stat-box profit"><div class="stat-val" id="dca-profit">—</div><div class="stat-label">複利獲利</div></div>
+        <div class="stat-box rate"><div class="stat-val" id="dca-multiplier">—</div><div class="stat-label">資產倍數</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">資產成長曲線</div>
+        <div class="chart-wrap"><canvas id="dca-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">重要里程碑</div>
+        <div class="milestone-list" id="dca-milestones"></div>
+      </div>
+      <div class="insight" id="dca-insight"></div>
+
+      <!-- EARLY COMPARE -->
+      <div id="early-compare-result" style="display:none;">
+        <div class="compare-grid">
+          <div class="compare-card winner">
+            <div class="compare-title">現在開始</div>
+            <div class="compare-num" id="ec-now">—</div>
+            <div class="compare-sub" id="ec-now-sub">—</div>
+          </div>
+          <div class="compare-card">
+            <div class="compare-title">晚5年開始</div>
+            <div class="compare-num" id="ec-late">—</div>
+            <div class="compare-sub" id="ec-late-sub">—</div>
+          </div>
+        </div>
+        <div class="compare-diff" id="ec-diff"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LUMP SUM MODE -->
+  <div id="mode-lump" style="display:none;">
+    <div class="card">
+      <div class="card-title">投資設定</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <div class="input-label">一次性投入金額</div>
+          <div class="input-desc">你現在要投入的本金</div>
+          <div class="input-wrap">
+            <input type="number" id="lump-amount" value="100000" min="1000" step="1000">
+            <span class="input-unit">元</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">預計年化報酬率</div>
+          <div class="input-desc">歷史平均：台股ETF約6–8%</div>
+          <div class="input-wrap">
+            <input type="number" id="lump-rate" value="7" min="1" max="20" step="0.5">
+            <span class="input-unit">%</span>
+          </div>
+        </div>
+        <div class="input-group full">
+          <div class="input-label">投資年數：<span class="range-val" id="lump-years-val">20</span> 年</div>
+          <input type="range" id="lump-years" min="1" max="40" value="20" oninput="document.getElementById('lump-years-val').textContent=this.value">
+          <div class="range-row"><span>1年</span><span>10年</span><span>20年</span><span>30年</span><span>40年</span></div>
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calcLump()">計算結果</button>
+    </div>
+    <div class="result-section" id="lump-result">
+      <div class="big-result">
+        <div class="big-label">最終資產</div>
+        <div class="big-num" id="lump-final">—</div>
+        <div class="big-sub" id="lump-final-sub">—</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box invest"><div class="stat-val" id="lump-total-in">—</div><div class="stat-label">投入本金</div></div>
+        <div class="stat-box profit"><div class="stat-val" id="lump-profit">—</div><div class="stat-label">複利獲利</div></div>
+        <div class="stat-box rate"><div class="stat-val" id="lump-multiplier">—</div><div class="stat-label">資產倍數</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">資產成長曲線</div>
+        <div class="chart-wrap"><canvas id="lump-chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">重要里程碑</div>
+        <div class="milestone-list" id="lump-milestones"></div>
+      </div>
+      <div class="insight" id="lump-insight"></div>
+    </div>
+  </div>
+
+  <!-- COMPARE MODE -->
+  <div id="mode-compare" style="display:none;">
+    <div class="card">
+      <div class="card-title">方案 A</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <div class="input-label">每月金額</div>
+          <div class="input-wrap"><input type="number" id="cmp-a-amount" value="3000" min="100" step="100"><span class="input-unit">元</span></div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">年化報酬率</div>
+          <div class="input-wrap"><input type="number" id="cmp-a-rate" value="7" min="1" max="20" step="0.5"><span class="input-unit">%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">方案 B</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <div class="input-label">每月金額</div>
+          <div class="input-wrap"><input type="number" id="cmp-b-amount" value="5000" min="100" step="100"><span class="input-unit">元</span></div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">年化報酬率</div>
+          <div class="input-wrap"><input type="number" id="cmp-b-rate" value="10" min="1" max="20" step="0.5"><span class="input-unit">%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="input-group full">
+        <div class="input-label">比較年數：<span class="range-val" id="cmp-years-val">20</span> 年</div>
+        <input type="range" id="cmp-years" min="1" max="40" value="20" oninput="document.getElementById('cmp-years-val').textContent=this.value">
+        <div class="range-row"><span>1年</span><span>10年</span><span>20年</span><span>30年</span><span>40年</span></div>
+      </div>
+      <button class="calc-btn" style="margin-top:16px;" onclick="calcCompare()">比較兩個方案</button>
+    </div>
+    <div class="result-section" id="cmp-result">
+      <div class="compare-grid">
+        <div class="compare-card" id="cmp-card-a">
+          <div class="compare-title">方案 A</div>
+          <div class="compare-num" id="cmp-a-final">—</div>
+          <div class="compare-sub" id="cmp-a-sub">—</div>
+        </div>
+        <div class="compare-card" id="cmp-card-b">
+          <div class="compare-title">方案 B</div>
+          <div class="compare-num" id="cmp-b-final">—</div>
+          <div class="compare-sub" id="cmp-b-sub">—</div>
+        </div>
+      </div>
+      <div class="compare-diff" id="cmp-diff"></div>
+      <div class="card">
+        <div class="card-title">兩方案成長比較</div>
+        <div class="chart-wrap"><canvas id="cmp-chart"></canvas></div>
+      </div>
+      <div class="insight" id="cmp-insight"></div>
+    </div>
+  </div>
+  </div>
+
+  <div class="master-page" id="master-port">
+    <!-- 總覽 -->
+  <div class="summary-row" id="summary-row">
+    <div class="summary-box invest"><div class="summary-val" id="sum-total-cost">—</div><div class="summary-label">總投入成本</div></div>
+    <div class="summary-box value"><div class="summary-val" id="sum-total-value">—</div><div class="summary-label">目前總市值</div></div>
+    <div class="summary-box profit" id="sum-profit-box"><div class="summary-val" id="sum-profit">—</div><div class="summary-label">未實現損益</div></div>
+    <div class="summary-box rate" id="sum-rate-box"><div class="summary-val" id="sum-rate">—</div><div class="summary-label">報酬率</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('record')">📝 新增交易</div>
+    <div class="tab" onclick="switchTab('holdings')">📊 持股總覽</div>
+    <div class="tab" onclick="switchTab('chart')">📈 走勢圖</div>
+    <div class="tab" onclick="switchTab('history')">📋 交易紀錄</div>
+  </div>
+
+  <!-- RECORD TAB -->
+  <div class="tab-page active" id="tab-record">
+    <div class="card">
+      <div class="card-title">新增買入紀錄</div>
+      <div class="input-grid">
+        <div class="input-group">
+          <div class="input-label">買入日期</div>
+          <input type="date" id="tx-date">
+        </div>
+        <div class="input-group">
+          <div class="input-label">ETF / 股票名稱</div>
+          <input type="text" id="tx-name" placeholder="例：0050、00878">
+        </div>
+        <div class="input-group">
+          <div class="input-label">買入股數</div>
+          <div class="input-wrap">
+            <input type="number" id="tx-shares" placeholder="例：5" min="0" step="0.001">
+            <span class="input-unit">股</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label">買入價格（每股）</div>
+          <div class="input-wrap">
+            <input type="number" id="tx-price" placeholder="例：160" min="0" step="0.01">
+            <span class="input-unit">元</span>
+          </div>
+        </div>
+      </div>
+      <button class="add-btn" onclick="addTransaction()">+ 新增這筆交易</button>
+    </div>
+    <div class="insight">
+      💡 每次零股下單後，把日期、ETF名稱、股數和成交價記錄下來。系統會自動計算你的總投入、平均成本和報酬率。
+    </div>
+  </div>
+
+  <!-- HOLDINGS TAB -->
+  <div class="tab-page" id="tab-holdings">
+    <div class="card">
+      <div class="card-title">更新目前股價</div>
+      <div class="subtitle">輸入每支ETF目前的市價，用來計算目前市值和報酬率</div>
+      <div id="price-input-list"></div>
+      <button class="add-btn" onclick="savePrices()">儲存股價並更新</button>
+    </div>
+    <div class="card">
+      <div class="card-title">持股明細</div>
+      <div id="holdings-list"></div>
+    </div>
+  </div>
+
+  <!-- CHART TAB -->
+  <div class="tab-page" id="tab-chart">
+    <div class="card">
+      <div class="card-title">資產成長走勢</div>
+      <div class="subtitle">紫色線：目前市值（依最新股價）　黃色虛線：累積投入成本</div>
+      <div class="chart-wrap"><canvas id="value-chart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">報酬率走勢</div>
+      <div class="subtitle">每次交易後的累積報酬率變化</div>
+      <div class="chart-wrap"><canvas id="rate-chart"></canvas></div>
+    </div>
+    <div class="insight" id="chart-insight"></div>
+  </div>
+
+  <!-- HISTORY TAB -->
+  <div class="tab-page" id="tab-history">
+    <div class="card">
+      <div class="card-title">所有交易紀錄</div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+  </div>
+
+</div>
+
+<script>
+// ── MASTER TAB SWITCH ──────────────────────────────
+function switchMaster(name){
+  document.querySelectorAll('.master-page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.master-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('master-'+name).classList.add('active');
+  var idx = ['sim','port'].indexOf(name);
+  document.querySelectorAll('.master-tab')[idx].classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+// 複利模擬器 (Simulator)
+// ══════════════════════════════════════════════════
+// ── HELPERS ───────────────────────────────────────
+function fmt(n){
+  if(n>=100000000) return (n/100000000).toFixed(2)+'億';
+  if(n>=10000) return (n/10000).toFixed(1)+'萬';
+  return Math.round(n).toLocaleString();
+}
+function fmtFull(n){ return Math.round(n).toLocaleString()+'元'; }
+
+// DCA formula: FV = PMT * [((1+r)^n - 1) / r]
+// monthly compounding
+function calcDCAValue(monthly, annualRate, years){
+  var r = annualRate / 100 / 12;
+  var n = years * 12;
+  if(r === 0) return monthly * n;
+  return monthly * ((Math.pow(1+r, n) - 1) / r) * (1+r);
+}
+
+function calcLumpValue(principal, annualRate, years){
+  return principal * Math.pow(1 + annualRate/100, years);
+}
+
+// ── CHARTS ────────────────────────────────────────
+var charts = {};
+function destroyChart(id){ if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+
+var chartDefaults = {
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){ return ' '+Math.round(ctx.parsed.y).toLocaleString()+'元'; }}}},
+  scales:{
+    x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5a5670',font:{size:11}}},
+    y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#5a5670',font:{size:11},callback:function(v){ return fmt(v); }}}
+  },
+  responsive:true,maintainAspectRatio:false,
+  animation:{duration:600}
+};
+
+// ── MODE SWITCH ────────────────────────────────────
+var currentMode = 'dca';
+function switchMode(mode){
+  currentMode = mode;
+  ['dca','lump','compare'].forEach(function(m){
+    document.getElementById('mode-'+m).style.display = m===mode?'block':'none';
+  });
+  document.querySelectorAll('.mode-tab').forEach(function(t,i){
+    t.classList.toggle('active',['dca','lump','compare'][i]===mode);
+  });
+}
+
+// ── ETF PRESETS ────────────────────────────────────
+var activePreset = null;
+function applyPreset(name, rate){
+  document.getElementById('dca-rate').value = rate;
+  activePreset = name;
+  document.querySelectorAll('.preset-btn').forEach(function(b){
+    b.classList.toggle('active', b.textContent.includes(name));
+  });
+}
+
+// ── EARLY COMPARE TOGGLE ──────────────────────────
+var earlyCompareOn = false;
+function toggleEarlyCompare(){
+  earlyCompareOn = !earlyCompareOn;
+  var box = document.getElementById('early-toggle');
+  box.classList.toggle('on', earlyCompareOn);
+}
+
+// ── DCA CALC ──────────────────────────────────────
+function calcDCA(){
+  var monthly = parseFloat(document.getElementById('dca-amount').value)||0;
+  var rate = parseFloat(document.getElementById('dca-rate').value)||0;
+  var years = parseInt(document.getElementById('dca-years').value)||0;
+  if(!monthly||!rate||!years) return;
+
+  var final = calcDCAValue(monthly, rate, years);
+  var totalIn = monthly * 12 * years;
+  var profit = final - totalIn;
+  var multiplier = final / totalIn;
+
+  document.getElementById('dca-final').textContent = fmt(final)+'元';
+  document.getElementById('dca-final-sub').textContent = '每月投入'+fmt(monthly)+'元，持續'+years+'年，年化'+rate+'%';
+  document.getElementById('dca-total-in').textContent = fmt(totalIn);
+  document.getElementById('dca-profit').textContent = fmt(profit);
+  document.getElementById('dca-multiplier').textContent = multiplier.toFixed(1)+'倍';
+
+  // chart data
+  var labels=[], dataIn=[], dataFinal=[];
+  for(var y=0;y<=years;y++){
+    labels.push(y+'年');
+    dataIn.push(monthly*12*y);
+    dataFinal.push(y===0?0:calcDCAValue(monthly,rate,y));
+  }
+
+  destroyChart('dca');
+  var ctx = document.getElementById('dca-chart').getContext('2d');
+  charts['dca'] = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:labels,
+      datasets:[
+        {label:'資產總值',data:dataFinal,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.08)',fill:true,tension:0.4,pointRadius:0,borderWidth:2},
+        {label:'總投入',data:dataIn,borderColor:'#fbbf24',backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1.5,borderDash:[4,4]}
+      ]
+    },
+    options:Object.assign({},chartDefaults,{plugins:Object.assign({},chartDefaults.plugins,{legend:{display:true,labels:{color:'#9994b0',font:{size:11},boxWidth:12}}})})
+  });
+
+  // milestones
+  var milestoneList = document.getElementById('dca-milestones');
+  milestoneList.innerHTML='';
+  var checkpoints = [1,3,5,10,20,30,40].filter(function(y){ return y<=years; });
+  if(!checkpoints.includes(years)) checkpoints.push(years);
+  checkpoints.sort(function(a,b){return a-b;});
+  var maxVal = calcDCAValue(monthly,rate,years);
+  checkpoints.forEach(function(y){
+    var v = calcDCAValue(monthly,rate,y);
+    var row = document.createElement('div');
+    row.className='milestone-row';
+    var pct = Math.min(100,(v/maxVal*100));
+    row.innerHTML='<span class="milestone-year">'+y+'年後</span><div class="milestone-bar-bg"><div class="milestone-bar" style="width:'+pct+'%"></div></div><span class="milestone-val">'+fmt(v)+'元</span>';
+    milestoneList.appendChild(row);
+  });
+
+  // insight
+  var doubleYear = Math.ceil(72/rate);
+  document.getElementById('dca-insight').innerHTML =
+    '💡 以年化 <strong>'+rate+'%</strong> 計算，本金大約每 <strong>'+doubleYear+'年</strong> 翻倍（72法則）。' +
+    '你'+years+'年總共投入 <strong>'+fmtFull(totalIn)+'</strong>，但靠複利讓資產變成 <strong>'+fmtFull(Math.round(final))+'</strong>，' +
+    '等於複利幫你多賺了 <strong>'+fmtFull(Math.round(profit))+'</strong>。';
+
+  // early compare
+  if(earlyCompareOn){
+    var lateYears = Math.max(1, years-5);
+    var lateTotal = calcDCAValue(monthly, rate, lateYears);
+    var lateTotalIn = monthly*12*lateYears;
+    document.getElementById('ec-now').textContent = fmt(final)+'元';
+    document.getElementById('ec-now-sub').textContent = '投入'+fmt(totalIn)+'元';
+    document.getElementById('ec-late').textContent = fmt(lateTotal)+'元';
+    document.getElementById('ec-late-sub').textContent = '投入'+fmt(lateTotalIn)+'元（晚5年）';
+    var diff = final - lateTotal;
+    document.getElementById('ec-diff').innerHTML =
+      '現在開始比晚5年開始，最終資產多出 <strong>'+fmtFull(Math.round(diff))+'</strong>。<br>只是早5年，差距相當於多投了 <strong>'+fmtFull(Math.round(diff))+'</strong> 的本金。';
+    document.getElementById('early-compare-result').style.display='block';
+  } else {
+    document.getElementById('early-compare-result').style.display='none';
+  }
+
+  document.getElementById('dca-result').classList.add('visible');
+  document.getElementById('dca-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── LUMP CALC ─────────────────────────────────────
+function calcLump(){
+  var principal = parseFloat(document.getElementById('lump-amount').value)||0;
+  var rate = parseFloat(document.getElementById('lump-rate').value)||0;
+  var years = parseInt(document.getElementById('lump-years').value)||0;
+  if(!principal||!rate||!years) return;
+
+  var final = calcLumpValue(principal,rate,years);
+  var profit = final - principal;
+  var multiplier = final/principal;
+
+  document.getElementById('lump-final').textContent = fmt(final)+'元';
+  document.getElementById('lump-final-sub').textContent = '一次投入'+fmt(principal)+'元，持有'+years+'年，年化'+rate+'%';
+  document.getElementById('lump-total-in').textContent = fmt(principal);
+  document.getElementById('lump-profit').textContent = fmt(profit);
+  document.getElementById('lump-multiplier').textContent = multiplier.toFixed(1)+'倍';
+
+  var labels=[], data=[];
+  for(var y=0;y<=years;y++){
+    labels.push(y+'年');
+    data.push(calcLumpValue(principal,rate,y));
+  }
+
+  destroyChart('lump');
+  var ctx = document.getElementById('lump-chart').getContext('2d');
+  charts['lump'] = new Chart(ctx,{
+    type:'line',
+    data:{labels:labels,datasets:[{label:'資產總值',data:data,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.08)',fill:true,tension:0.4,pointRadius:0,borderWidth:2}]},
+    options:chartDefaults
+  });
+
+  var milestoneList = document.getElementById('lump-milestones');
+  milestoneList.innerHTML='';
+  var checkpoints=[1,3,5,10,20,30,40].filter(function(y){return y<=years;});
+  if(!checkpoints.includes(years)) checkpoints.push(years);
+  checkpoints.sort(function(a,b){return a-b;});
+  var maxVal = calcLumpValue(principal,rate,years);
+  checkpoints.forEach(function(y){
+    var v=calcLumpValue(principal,rate,y);
+    var row=document.createElement('div');
+    row.className='milestone-row';
+    row.innerHTML='<span class="milestone-year">'+y+'年後</span><div class="milestone-bar-bg"><div class="milestone-bar" style="width:'+Math.min(100,v/maxVal*100)+'%"></div></div><span class="milestone-val">'+fmt(v)+'元</span>';
+    milestoneList.appendChild(row);
+  });
+
+  var doubleYear=Math.ceil(72/rate);
+  document.getElementById('lump-insight').innerHTML=
+    '💡 一次投入 <strong>'+fmtFull(principal)+'</strong>，以年化 <strong>'+rate+'%</strong> 持有 <strong>'+years+'年</strong>，' +
+    '本金會增長 <strong>'+multiplier.toFixed(1)+'倍</strong>，' +
+    '複利幫你額外賺了 <strong>'+fmtFull(Math.round(profit))+'</strong>，完全不需要再做任何事。';
+
+  document.getElementById('lump-result').classList.add('visible');
+  document.getElementById('lump-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ── COMPARE CALC ──────────────────────────────────
+function calcCompare(){
+  var aAmt=parseFloat(document.getElementById('cmp-a-amount').value)||0;
+  var aRate=parseFloat(document.getElementById('cmp-a-rate').value)||0;
+  var bAmt=parseFloat(document.getElementById('cmp-b-amount').value)||0;
+  var bRate=parseFloat(document.getElementById('cmp-b-rate').value)||0;
+  var years=parseInt(document.getElementById('cmp-years').value)||0;
+  if(!aAmt||!aRate||!bAmt||!bRate||!years) return;
+
+  var aFinal=calcDCAValue(aAmt,aRate,years);
+  var bFinal=calcDCAValue(bAmt,bRate,years);
+  var aTotalIn=aAmt*12*years;
+  var bTotalIn=bAmt*12*years;
+
+  var aWins=aFinal>=bFinal;
+  document.getElementById('cmp-card-a').className='compare-card'+(aWins?' winner':'');
+  document.getElementById('cmp-card-b').className='compare-card'+(!aWins?' winner':'');
+
+  document.getElementById('cmp-a-final').textContent=fmt(aFinal)+'元';
+  document.getElementById('cmp-a-sub').textContent='投入'+fmt(aTotalIn)+'元，月'+fmt(aAmt)+'元 × '+aRate+'%';
+  document.getElementById('cmp-b-final').textContent=fmt(bFinal)+'元';
+  document.getElementById('cmp-b-sub').textContent='投入'+fmt(bTotalIn)+'元，月'+fmt(bAmt)+'元 × '+bRate+'%';
+
+  var diff=Math.abs(aFinal-bFinal);
+  var winner=aWins?'方案A':'方案B';
+  document.getElementById('cmp-diff').innerHTML=
+    '<strong>'+winner+'</strong> 勝出，'+years+'年後多出 <strong>'+fmtFull(Math.round(diff))+'</strong>';
+
+  var labels=[];
+  var dataA=[],dataB=[];
+  for(var y=0;y<=years;y++){
+    labels.push(y+'年');
+    dataA.push(y===0?0:calcDCAValue(aAmt,aRate,y));
+    dataB.push(y===0?0:calcDCAValue(bAmt,bRate,y));
+  }
+
+  destroyChart('cmp');
+  var ctx=document.getElementById('cmp-chart').getContext('2d');
+  charts['cmp']=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:labels,
+      datasets:[
+        {label:'方案A',data:dataA,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.06)',fill:true,tension:0.4,pointRadius:0,borderWidth:2},
+        {label:'方案B',data:dataB,borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,0.06)',fill:true,tension:0.4,pointRadius:0,borderWidth:2}
+      ]
+    },
+    options:Object.assign({},chartDefaults,{plugins:Object.assign({},chartDefaults.plugins,{legend:{display:true,labels:{color:'#9994b0',font:{size:11},boxWidth:12}}})})
+  });
+
+  document.getElementById('cmp-insight').innerHTML=
+    '💡 報酬率的差異比金額更有威力。方案B的報酬率比方案A高 <strong>'+(bRate-aRate).toFixed(1)+'%</strong>，' +
+    '每月多投 <strong>'+fmt(bAmt-aAmt)+'元</strong>，'+years+'年後差距達 <strong>'+fmtFull(Math.round(diff))+'</strong>。' +
+    '這說明選對標的比多存錢更重要。';
+
+  document.getElementById('cmp-result').classList.add('visible');
+  document.getElementById('cmp-result').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ══════════════════════════════════════════════════
+// 投資紀錄追蹤 (Portfolio Tracker)
+// ══════════════════════════════════════════════════
+// ── STORAGE ───────────────────────────────────────
+function getTx(){ try{return JSON.parse(localStorage.getItem('portfolio_tx')||'[]')}catch(e){return[]} }
+function saveTx(d){ localStorage.setItem('portfolio_tx', JSON.stringify(d)); }
+function getPrices(){ try{return JSON.parse(localStorage.getItem('portfolio_prices')||'{}')}catch(e){return{}} }
+function savePricesData(d){ localStorage.setItem('portfolio_prices', JSON.stringify(d)); }
+
+// ── HELPERS ───────────────────────────────────────
+
+
+function fmtSigned(n){ return (n>=0?'+':'')+Math.round(n).toLocaleString()+'元'; }
+
+// ── TAB SWITCH ────────────────────────────────────
+function switchTab(name){
+  document.querySelectorAll('.tab-page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('tab-'+name).classList.add('active');
+  var idx = ['record','holdings','chart','history'].indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  if(name==='holdings') renderHoldings();
+  if(name==='chart') renderCharts();
+  if(name==='history') renderHistory();
+}
+
+// ── ADD TRANSACTION ───────────────────────────────
+function addTransaction(){
+  var date = document.getElementById('tx-date').value;
+  var name = document.getElementById('tx-name').value.trim();
+  var shares = parseFloat(document.getElementById('tx-shares').value);
+  var price = parseFloat(document.getElementById('tx-price').value);
+
+  if(!date || !name || !shares || !price){
+    alert('請填寫完整的日期、名稱、股數和價格');
+    return;
+  }
+
+  var tx = getTx();
+  tx.push({id: Date.now(), date: date, name: name, shares: shares, price: price});
+  tx.sort(function(a,b){ return a.date.localeCompare(b.date); });
+  saveTx(tx);
+
+  document.getElementById('tx-name').value = '';
+  document.getElementById('tx-shares').value = '';
+  document.getElementById('tx-price').value = '';
+
+  renderSummary();
+  alert('已新增：'+date+' 買入 '+name+' '+shares+'股 @ '+price+'元');
+}
+
+function deleteTx(id){
+  if(!confirm('確定要刪除這筆交易紀錄嗎？')) return;
+  var tx = getTx().filter(function(t){ return t.id !== id; });
+  saveTx(tx);
+  renderSummary();
+  renderHistory();
+  renderHoldings();
+  renderCharts();
+}
+
+// ── AGGREGATE HOLDINGS ────────────────────────────
+function getHoldingsMap(){
+  var tx = getTx();
+  var map = {};
+  tx.forEach(function(t){
+    if(!map[t.name]) map[t.name] = {shares:0, cost:0};
+    map[t.name].shares += t.shares;
+    map[t.name].cost += t.shares * t.price;
+  });
+  return map;
+}
+
+// ── SUMMARY ───────────────────────────────────────
+function renderSummary(){
+  var tx = getTx();
+  var holdings = getHoldingsMap();
+  var prices = getPrices();
+
+  var totalCost = 0, totalValue = 0;
+  Object.keys(holdings).forEach(function(name){
+    var h = holdings[name];
+    totalCost += h.cost;
+    var price = prices[name] !== undefined ? prices[name] : (h.shares>0 ? h.cost/h.shares : 0);
+    totalValue += h.shares * price;
+  });
+
+  var profit = totalValue - totalCost;
+  var rate = totalCost > 0 ? (profit/totalCost*100) : 0;
+
+  document.getElementById('sum-total-cost').textContent = tx.length ? fmt(totalCost) : '—';
+  document.getElementById('sum-total-value').textContent = tx.length ? fmt(totalValue) : '—';
+  document.getElementById('sum-profit').textContent = tx.length ? fmtSigned(profit) : '—';
+  document.getElementById('sum-rate').textContent = tx.length ? (rate>=0?'+':'')+rate.toFixed(2)+'%' : '—';
+
+  var profitBox = document.getElementById('sum-profit-box');
+  var rateBox = document.getElementById('sum-rate-box');
+  profitBox.classList.toggle('neg', profit < 0);
+  rateBox.classList.toggle('neg', rate < 0);
+}
+
+// ── HOLDINGS TAB ──────────────────────────────────
+function renderPriceInputs(){
+  var holdings = getHoldingsMap();
+  var prices = getPrices();
+  var list = document.getElementById('price-input-list');
+  list.innerHTML = '';
+  var names = Object.keys(holdings);
+  if(names.length === 0){
+    list.innerHTML = '<div class="empty-state">還沒有任何持股，先到「新增交易」頁面記錄你的第一筆買入！</div>';
+    return;
+  }
+  names.forEach(function(name){
+    var h = holdings[name];
+    var avgCost = h.shares > 0 ? (h.cost/h.shares) : 0;
+    var currentPrice = prices[name] !== undefined ? prices[name] : avgCost;
+    var row = document.createElement('div');
+    row.className = 'price-row';
+    row.innerHTML =
+      '<span class="price-name">'+name+'</span>'+
+      '<span class="price-shares">持有 '+h.shares.toFixed(2)+' 股</span>'+
+      '<div class="input-wrap price-input">'+
+        '<input type="number" id="price-'+name+'" value="'+currentPrice.toFixed(2)+'" step="0.01" min="0">'+
+        '<span class="input-unit">元</span>'+
+      '</div>';
+    list.appendChild(row);
+  });
+}
+
+function savePrices(){
+  var holdings = getHoldingsMap();
+  var prices = getPrices();
+  Object.keys(holdings).forEach(function(name){
+    var input = document.getElementById('price-'+name);
+    if(input){
+      var val = parseFloat(input.value);
+      if(!isNaN(val)) prices[name] = val;
+    }
+  });
+  savePricesData(prices);
+  renderHoldings();
+  renderSummary();
+}
+
+function renderHoldings(){
+  renderPriceInputs();
+  var holdings = getHoldingsMap();
+  var prices = getPrices();
+  var list = document.getElementById('holdings-list');
+  list.innerHTML = '';
+  var names = Object.keys(holdings);
+  if(names.length === 0){
+    list.innerHTML = '<div class="empty-state">還沒有任何持股</div>';
+    return;
+  }
+  names.forEach(function(name){
+    var h = holdings[name];
+    var avgCost = h.shares > 0 ? (h.cost/h.shares) : 0;
+    var currentPrice = prices[name] !== undefined ? prices[name] : avgCost;
+    var currentValue = h.shares * currentPrice;
+    var profit = currentValue - h.cost;
+    var rate = h.cost > 0 ? (profit/h.cost*100) : 0;
+
+    var row = document.createElement('div');
+    row.className = 'holding-row';
+    row.innerHTML =
+      '<div class="holding-info">'+
+        '<div class="holding-name">'+name+'</div>'+
+        '<div class="holding-detail">'+h.shares.toFixed(2)+'股　均價'+avgCost.toFixed(2)+'　現價'+currentPrice.toFixed(2)+'</div>'+
+      '</div>'+
+      '<div class="holding-stats">'+
+        '<div class="holding-val" style="color:'+(profit>=0?'var(--green)':'var(--coral)')+'">'+fmt(currentValue)+'</div>'+
+        '<div class="holding-cost">'+(profit>=0?'+':'')+rate.toFixed(1)+'% ('+(profit>=0?'+':'')+fmt(profit)+')</div>'+
+      '</div>';
+    list.appendChild(row);
+  });
+}
+
+// ── HISTORY TAB ───────────────────────────────────
+function renderHistory(){
+  var tx = getTx().slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+  var list = document.getElementById('history-list');
+  list.innerHTML = '';
+  if(tx.length === 0){
+    list.innerHTML = '<div class="empty-state">還沒有交易紀錄</div>';
+    return;
+  }
+  tx.forEach(function(t){
+    var row = document.createElement('div');
+    row.className = 'tx-row';
+    row.innerHTML =
+      '<span class="tx-date">'+t.date+'</span>'+
+      '<span class="tx-name">'+t.name+'</span>'+
+      '<span class="tx-detail">'+t.shares+'股 @ '+t.price+'</span>'+
+      '<span class="tx-delete" onclick="deleteTx('+t.id+')">×</span>';
+    list.appendChild(row);
+  });
+}
+
+// ── CHARTS ────────────────────────────────────────
+var pCharts = {};
+function destroyPChart(id){ if(pCharts[id]){ pCharts[id].destroy(); delete pCharts[id]; } }
+
+
+
+function renderCharts(){
+  var tx = getTx().slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  if(tx.length === 0){
+    document.getElementById('tab-chart').querySelector('.card').insertAdjacentHTML('beforeend','');
+    document.getElementById('chart-insight').innerHTML = '還沒有交易紀錄，新增買入紀錄後這裡會顯示走勢圖。';
+    destroyPChart('value');
+    destroyPChart('rate');
+    return;
+  }
+
+  var prices = getPrices();
+
+  // 逐筆累積：每一筆交易後計算累積成本，市值用「當下持股 × 目前股價」估算趨勢
+  // 為了讓走勢圖有意義：成本線用累積實際投入，市值線用「假設用目前股價回算」的歷史市值趨勢（簡化：以累積股數 × 目前價格，但每個時間點的價格用買入價的加權移動）
+  var labels = [];
+  var costLine = [];
+  var valueLine = [];
+  var rateLine = [];
+
+  var cumShares = {}; // per name
+  var cumCost = 0;
+
+  tx.forEach(function(t){
+    cumCost += t.shares * t.price;
+    if(!cumShares[t.name]) cumShares[t.name] = 0;
+    cumShares[t.name] += t.shares;
+
+    // estimate value at this point: for each held name, use price at that time = blended avg up to now (simplification)
+    // Better approach: use current known price for all (since we don't have historical price API)
+    var valueAtPoint = 0;
+    Object.keys(cumShares).forEach(function(name){
+      var avgCostForName = 0;
+      // compute avg cost up to this point for this name
+      var sharesSoFar = 0, costSoFar = 0;
+      tx.forEach(function(t2){
+        if(t2.date <= t.date && t2.name === name){
+          sharesSoFar += t2.shares;
+          costSoFar += t2.shares * t2.price;
+        }
+      });
+      var priceToUse = prices[name] !== undefined ? prices[name] : (sharesSoFar>0?costSoFar/sharesSoFar:0);
+      valueAtPoint += cumShares[name] * priceToUse;
+    });
+
+    labels.push(t.date);
+    costLine.push(cumCost);
+    valueLine.push(valueAtPoint);
+    rateLine.push(cumCost>0 ? ((valueAtPoint-cumCost)/cumCost*100) : 0);
+  });
+
+  destroyPChart('value');
+  var vCtx = document.getElementById('value-chart').getContext('2d');
+  pCharts['value'] = new Chart(vCtx, {
+    type:'line',
+    data:{
+      labels: labels,
+      datasets:[
+        {label:'目前市值',data:valueLine,borderColor:'#9b87f5',backgroundColor:'rgba(155,135,245,0.08)',fill:true,tension:0.3,pointRadius:3,borderWidth:2},
+        {label:'累積投入成本',data:costLine,borderColor:'#fbbf24',backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1.5,borderDash:[4,4]}
+      ]
+    },
+    options:Object.assign({},chartDefaults,{
+      plugins:Object.assign({},chartDefaults.plugins,{
+        tooltip:{callbacks:{label:function(c){ return ' '+c.dataset.label+': '+Math.round(c.parsed.y).toLocaleString()+'元'; }}}
+      }),
+      scales:Object.assign({},chartDefaults.scales,{
+        y:Object.assign({},chartDefaults.scales.y,{ticks:Object.assign({},chartDefaults.scales.y.ticks,{callback:function(v){return fmt(v);}})})
+      })
+    })
+  });
+
+  destroyPChart('rate');
+  var rCtx = document.getElementById('rate-chart').getContext('2d');
+  pCharts['rate'] = new Chart(rCtx, {
+    type:'line',
+    data:{
+      labels: labels,
+      datasets:[{label:'累積報酬率%',data:rateLine,borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,0.08)',fill:true,tension:0.3,pointRadius:3,borderWidth:2}]
+    },
+    options:Object.assign({},chartDefaults,{
+      plugins:Object.assign({},chartDefaults.plugins,{
+        legend:{display:false},
+        tooltip:{callbacks:{label:function(c){ return ' 報酬率: '+c.parsed.y.toFixed(2)+'%'; }}}
+      }),
+      scales:Object.assign({},chartDefaults.scales,{
+        y:Object.assign({},chartDefaults.scales.y,{ticks:Object.assign({},chartDefaults.scales.y.ticks,{callback:function(v){return v+'%';}})})
+      })
+    })
+  });
+
+  // insight
+  var lastRate = rateLine[rateLine.length-1];
+  var lastValue = valueLine[valueLine.length-1];
+  var lastCost = costLine[costLine.length-1];
+  var profit = lastValue - lastCost;
+  document.getElementById('chart-insight').innerHTML =
+    '💡 目前累積投入 <strong>'+fmtFull(Math.round(lastCost))+'</strong>，市值約 <strong>'+fmtFull(Math.round(lastValue))+'</strong>，' +
+    (profit>=0 ? '帳上獲利 <strong>'+fmtFull(Math.round(profit))+'</strong>' : '帳上虧損 <strong>'+fmtFull(Math.round(-profit))+'</strong>') +
+    '，報酬率 <strong>'+(lastRate>=0?'+':'')+lastRate.toFixed(2)+'%</strong>。' +
+    '<br>市值會依「持股總覽」頁面更新的股價計算，記得偶爾更新最新股價，走勢才會準確。';
+}
+
+// ── INIT ──────────────────────────────────────────
+(function init(){
+  var today = new Date();
+  document.getElementById('tx-date').value = today.toISOString().slice(0,10);
+  renderSummary();
+})();
+</script>
+</body>
+</html>
